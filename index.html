@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>上海四年级下语文分阶段复习计划</title>
+    <meta name="theme-color" content="#f8f3ea" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="四下语文复习" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/app-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./assets/study-dashboard-concept.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="回到顶部">
+        <span class="brand-mark">四下</span>
+        <span>
+          <strong>上海四年级下语文复习</strong>
+          <small>2026-05-25 至 2026-06-21</small>
+        </span>
+      </a>
+      <nav class="nav" aria-label="页面导航">
+        <a href="#plan">阶段计划</a>
+        <a href="#foundation">基础总表</a>
+        <a href="#daily">每日任务</a>
+        <a href="#resources">资料库</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section id="plan" class="section-block">
+        <div class="section-heading">
+          <p>Phase plan</p>
+          <h2>四阶段复习路线</h2>
+        </div>
+        <div class="phase-tabs" role="tablist" aria-label="复习阶段选择">
+          <button class="phase-tab active" type="button" data-phase="0">基础校准</button>
+          <button class="phase-tab" type="button" data-phase="1">课内巩固</button>
+          <button class="phase-tab" type="button" data-phase="2">阅读习作</button>
+          <button class="phase-tab" type="button" data-phase="3">模拟冲刺</button>
+        </div>
+        <div id="phaseDetail" class="phase-detail" aria-live="polite"></div>
+      </section>
+
+      <section id="foundation" class="section-block foundation">
+        <div class="section-heading">
+          <p>Foundation bank</p>
+          <h2>基础知识总表</h2>
+        </div>
+        <div class="foundation-shell">
+          <aside class="unit-tabs" aria-label="基础知识单元选择"></aside>
+          <div class="foundation-panel">
+            <div class="foundation-head">
+              <div>
+                <p class="mini-label">当前单元</p>
+                <h3 id="foundationTitle"></h3>
+                <p id="foundationFocus" class="day-focus"></p>
+              </div>
+              <div class="foundation-actions">
+                <div class="completion-card">
+                  <strong id="foundationCount"></strong>
+                  <span>识字表核对</span>
+                </div>
+                <button class="print-action" id="printSheet" type="button">打印默写表</button>
+              </div>
+            </div>
+            <div class="sound-legend" aria-label="拼音标注说明">
+              <span><b>平</b> 平舌音 z/c/s</span>
+              <span><b>翘</b> 翘舌音 zh/ch/sh/r</span>
+              <span><b>前</b> 前鼻音 -n</span>
+              <span><b>后</b> 后鼻音 -ng</span>
+            </div>
+            <div class="foundation-grid">
+              <article>
+                <h4>生字拼音</h4>
+                <p class="help-text">红色为平舌、翘舌、前鼻或后鼻音，需要重点读准。</p>
+                <div id="charBank" class="chip-bank"></div>
+              </article>
+              <article>
+                <h4>词语听写</h4>
+                <p class="help-text">建议每天 12-16 个，先看词读音，再听写订正。</p>
+                <div id="dictationBank" class="word-bank"></div>
+              </article>
+              <article>
+                <h4>背诵默写</h4>
+                <p class="help-text">古诗文可全文默写；现代课文请回到教材原文背。</p>
+                <div id="reciteBank" class="recite-bank"></div>
+              </article>
+              <article>
+                <h4>拼音易错点</h4>
+                <p class="help-text">这些字优先做“看字注音”和“听音写词”。</p>
+                <div id="pinyinBank" class="word-bank compact"></div>
+              </article>
+              <article>
+                <h4>多音字辨析</h4>
+                <p class="help-text">列出本课读音和其他常见读音，分别组词。</p>
+                <div id="polyphoneBank" class="polyphone-bank"></div>
+              </article>
+            </div>
+            <div id="printableSheet" class="printable-sheet" aria-label="可打印默写表"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="daily" class="section-block daily-layout">
+        <div class="section-heading">
+          <p>Daily board</p>
+          <h2>每日任务板</h2>
+        </div>
+        <div class="day-picker" aria-label="选择复习日期">
+          <button type="button" class="day-shift" id="prevDay" aria-label="前一天">‹</button>
+          <select id="daySelect"></select>
+          <button type="button" class="day-shift" id="nextDay" aria-label="后一天">›</button>
+        </div>
+        <div class="daily-panel">
+          <div>
+            <p class="mini-label">今日重点</p>
+            <h3 id="dayTitle"></h3>
+            <p id="dayFocus" class="day-focus"></p>
+          </div>
+          <div id="taskList" class="task-list"></div>
+        </div>
+      </section>
+
+      <section class="section-block unit-map">
+        <div class="section-heading">
+          <p>Unit map</p>
+          <h2>八个单元复盘重点</h2>
+        </div>
+        <div class="unit-grid">
+          <article>
+            <strong>第一单元</strong>
+            <span>乡村生活、景物描写、习作“我的乐园”</span>
+          </article>
+          <article>
+            <strong>第二单元</strong>
+            <span>科普说明、提问策略、习作“我的奇思妙想”</span>
+          </article>
+          <article>
+            <strong>第三单元</strong>
+            <span>现代诗、意象与节奏、诗歌摘抄与仿写</span>
+          </article>
+          <article>
+            <strong>第四单元</strong>
+            <span>动物描写、明贬实褒、习作“我的动物朋友”</span>
+          </article>
+          <article>
+            <strong>第五单元</strong>
+            <span>游览顺序、景物转换、习作“游____”</span>
+          </article>
+          <article>
+            <strong>第六单元</strong>
+            <span>长文章把握主要内容、成长故事、习作“我学会了____”</span>
+          </article>
+          <article>
+            <strong>第七单元</strong>
+            <span>人物品质、古诗文积累、习作“我的自画像”</span>
+          </article>
+          <article>
+            <strong>第八单元</strong>
+            <span>童话故事、想象与改编、习作“故事新编”</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="resources" class="section-block">
+        <div class="section-heading">
+          <p>Resource library</p>
+          <h2>已下载资料与来源</h2>
+        </div>
+        <div class="resource-grid">
+          <a class="resource-card" href="./resources/grade4-chinese-knowledge-points.pdf" target="_blank">
+            <span>PDF</span>
+            <strong>四年级下册必背必考知识点梳理</strong>
+            <small>用于第 1-2 阶段：字词、古诗、课文要点。</small>
+          </a>
+          <a class="resource-card" href="./resources/textbook-afterclass-answers.pdf" target="_blank">
+            <span>PDF</span>
+            <strong>统编版四下课后题参考答案</strong>
+            <small>用于校准课后题表达，不建议直接背答案。</small>
+          </a>
+          <a class="resource-card" href="./resources/final-test-1.pdf" target="_blank">
+            <span>PDF</span>
+            <strong>四年级语文下册期末测试卷（一）</strong>
+            <small>用于第 4 阶段完整模拟。</small>
+          </a>
+          <a class="resource-card" href="./resources/final-test-5-with-answers.pdf" target="_blank">
+            <span>PDF</span>
+            <strong>四年级语文下册期末测试卷（五）答案解析</strong>
+            <small>用于讲评和查漏补缺。</small>
+          </a>
+        </div>
+        <div class="source-note">
+          <h3>资料使用说明</h3>
+          <p>
+            上海本地复习依据优先参考课程标准、上海市教委“基于课程标准的教学与评价”要求，以及闵行区 2026 年小学语文单元作业设计教研信息。第三方 PDF 仅作为练习素材，家长可按孩子学校实际教材进度删减。
+          </p>
+          <ul>
+            <li><a href="https://www.shanghai.gov.cn/nw12344/20200814/0001-12344_36655.html" target="_blank">上海市教委：小学阶段实施基于课程标准的教学与评价工作意见</a></li>
+            <li><a href="https://www.sste.com/index.php/books1/1705.html" target="_blank">上海市小学基于课程标准的教学与评价实践指南</a></li>
+            <li><a href="https://jyxy.mhedu.sh.cn/extranet/web/index/index%21infoMove.action?code=EDXW.005.002&id=ff8080819c0f0289019d8512070118b7" target="_blank">闵行区小学语文单元作业设计教研动态</a></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>本页为家庭复习规划工具。进度记录保存在本机浏览器中，可随时重新勾选。</p>
+    </footer>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
