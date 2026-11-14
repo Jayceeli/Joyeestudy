@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<title>AI 是我们的好帮手</title>
+<!--
+  五三班分享文稿。双击用浏览器打开即可放映，不需要网络。
+  右方向键下一页，左方向键上一页，N 显示或隐藏讲稿，F 全屏。
+  请把讲稿里的「××」改成孩子的名字。
+-->
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(circle at 8% 12%, #ffe0bf 0 12%, transparent 13%),
+      radial-gradient(circle at 92% 88%, #ffd0dc 0 14%, transparent 15%),
+      #ebdcc8;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    color: #2a2a2a;
+  }
+  button, input { font-family: inherit; color: inherit; }
+  button { cursor: pointer; touch-action: manipulation; }
+  button:focus-visible, .idea:focus-visible { outline: 4px solid #4c9aff; outline-offset: 2px; }
+  #stage {
+    position: relative;
+    width: min(calc(100vw - 24px), calc((100vh - 24px) * 16 / 9));
+    height: min(calc(100vh - 24px), calc((100vw - 24px) * 9 / 16));
+    font-size: calc(min(calc(100vw - 24px), calc((100vh - 24px) * 16 / 9)) / 36);
+    background: #fff7ec;
+    border: 4px solid #2a2a2a;
+    border-radius: 28px;
+    box-shadow: 10px 10px 0 #2a2a2a;
+    overflow: hidden;
+  }
+  #progress { position: absolute; left: 0; right: 0; top: 0; height: 8px; background: #f3e6d4; z-index: 8; }
+  #progress > span { display: block; height: 100%; width: 0; background: #ffd84d; border-right: 3px solid #2a2a2a; }
+  .slide {
+    position: absolute; inset: 0; display: none;
+    background: #fff7ec;
+  }
+  .slide.active { display: block; }
+  .slide::before {
+    content: ""; position: absolute; width: 3.1em; height: 3.1em; border-radius: 50%;
+    background: var(--tone, #ffd84d); border: 3px solid #2a2a2a; left: -0.7em; top: -0.8em; z-index: 0;
+  }
+  .slide[data-tone="sun"] { --tone: #ffd84d; }
+  .slide[data-tone="sky"] { --tone: #4c9aff; }
+  .slide[data-tone="mint"] { --tone: #7bd66a; }
+  .slide[data-tone="coral"] { --tone: #ff8fab; }
+  .slide[data-tone="grape"] { --tone: #b9a6ff; }
+  .slide[data-tone="orange"] { --tone: #ffb084; }
+  .slide-inner {
+    position: relative; z-index: 1; height: 100%; overflow: hidden;
+    padding: 58px 96px 54px; display: flex; flex-direction: column;
+  }
+  #stage.back .slide.active .slide-inner { animation: enter-back .42s ease both; }
+  #stage:not(.back) .slide.active .slide-inner { animation: enter .42s ease both; }
+  @keyframes enter { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+  @keyframes enter-back { from { opacity: 0; transform: translateX(-22px); } to { opacity: 1; transform: none; } }
+  .kicker {
+    display: inline-flex; align-self: flex-start; margin: 0;
+    background: #fff; border: 3px solid #2a2a2a; border-radius: 999px;
+    padding: 0.12em 0.38em; font-size: 0.32em; font-weight: 800;
+    box-shadow: 2px 2px 0 #2a2a2a;
+  }
+  h1 { margin: 0.04em 0 0.06em; font-size: 1.22em; line-height: 1.12; letter-spacing: -0.03em; }
+  .sub { margin: 0.05em 0; font-size: 0.5em; font-weight: 800; }
+  .problem { margin: 0 0 0.12em; font-size: 0.46em; font-weight: 800; line-height: 1.35; }
+  .fill { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .notes { display: none; }
+  .cover { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.15fr .85fr; gap: .3em; align-items: center; }
+  .cover h1 { font-size: 1.85em; margin-right: 0; }
+  .pills { display: flex; flex-wrap: wrap; gap: .16em; margin-top: .2em; }
+  .pills span, .hint {
+    background: #fff; border: 3px solid #2a2a2a; border-radius: 999px;
+    padding: .22em .46em; font-size: .36em; font-weight: 800; box-shadow: 2px 2px 0 #2a2a2a;
+  }
+  .hint { margin-top: .28em; background: transparent; box-shadow: none; width: max-content; }
+  .mascot-svg { width: 100%; height: auto; max-height: 6.8em; }
+  .floaty { animation: floaty 3.2s ease-in-out infinite; }
+  @keyframes floaty { 50% { transform: translateY(-0.12em); } }
+  .cards, .cards-5, .cards-4, .cards-3, .cards-2, .mini-grid, .ideas {
+    display: grid; gap: .22em; flex: 1; min-height: 0; align-content: center;
+  }
+  .cards, .cards-4 { grid-template-columns: repeat(4, 1fr); }
+  .cards-5 { grid-template-columns: repeat(5, 1fr); }
+  .cards-3 { grid-template-columns: repeat(3, 1fr); }
+  .cards-2, .ideas { grid-template-columns: repeat(3, 1fr); }
+  .mini-grid { grid-template-columns: repeat(3, 1fr); }
+  .card, .idea, .mini-grid div, .obj {
+    background: #fff; border: 3px solid #2a2a2a; border-radius: .38em;
+    box-shadow: 4px 4px 0 #2a2a2a; padding: .22em .18em;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: .08em; min-width: 0;
+  }
+  .idea { width: 100%; }
+  .idea.picked { background: #fff3b0; transform: translate(2px, 2px); box-shadow: none; }
+  .card h3, .idea strong, .obj strong { margin: 0; font-size: .56em; line-height: 1.25; }
+  .card p, .idea span, .obj span { margin: 0; font-size: .38em; font-weight: 700; line-height: 1.35; }
+  .sticker {
+    width: 2.05em; height: 2.05em; border-radius: .36em; border: 3px solid #2a2a2a;
+    display: grid; place-items: center; box-shadow: 3px 3px 0 #2a2a2a; background: #ffd84d;
+    font-weight: 900; font-size: .82em;
+  }
+  .sticker svg, .glyph { width: 1.35em; height: 1.35em; }
+  .mini-grid div { flex-direction: row; justify-content: flex-start; font-size: .46em; font-weight: 800; text-align: left; }
+  .mini-grid b {
+    width: 1.7em; height: 1.7em; flex: none; border-radius: 50%; display: grid; place-items: center;
+    background: #ffd84d; border: 3px solid #2a2a2a;
+  }
+  .split { flex: 1; min-height: 0; display: grid; grid-template-columns: .92fr 1.08fr; gap: .32em; align-items: center; }
+  .hero-svg { width: 100%; height: auto; max-height: 7.4em; }
+  .flow, .how { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .16em; }
+  .flow li, .how li {
+    display: flex; gap: .22em; align-items: center; background: #fff;
+    border: 3px solid #2a2a2a; border-radius: .32em; padding: .14em .2em; box-shadow: 3px 3px 0 #2a2a2a;
+  }
+  .flow b, .how b {
+    width: 2.1em; height: 2.1em; flex: none; border-radius: 50%; display: grid; place-items: center;
+    background: #ffd84d; border: 3px solid #2a2a2a; font-size: .4em;
+  }
+  .flow span, .how strong { display: block; font-size: .42em; font-weight: 800; }
+  .flow small, .how em { display: block; font-style: normal; font-size: .32em; font-weight: 700; color: #4a433c; }
+  .lab { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.18fr .82fr; gap: .28em; }
+  .lab-art {
+    background: #fff; border: 3px solid #2a2a2a; border-radius: .4em;
+    box-shadow: 4px 4px 0 #2a2a2a; min-height: 0; overflow: hidden;
+    position: relative;
+  }
+  .lab-art > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  svg text { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .lab-side { display: flex; flex-direction: column; min-height: 0; }
+  .steps { flex: 1; overflow: auto; margin: 0; padding: 0; list-style: none; font-size: .48em; }
+  .steps li {
+    background: #fff; border: 3px solid #2a2a2a; border-radius: .28em;
+    padding: .32em .4em; margin: 0 0 .26em; font-weight: 800; line-height: 1.35;
+  }
+  .steps li.fresh { background: #fff4c2; }
+  .steps li.final { background: #d9ffb0; }
+  .steps li.wait { border-style: dashed; background: #fffdf8; color: #5c5348; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 .08em; line-height: 1; font-size: .92em; }
+  .frac i { display: block; width: 100%; border-top: 2px solid currentColor; }
+  .lab-actions, .row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .go, .choice, .poem-line button, .tool-btn, .nav-btn {
+    border: 3px solid #2a2a2a; border-radius: 999px; background: #ffd84d;
+    box-shadow: 3px 3px 0 #2a2a2a; font-weight: 800;
+  }
+  .go { font-size: .4em; padding: .62em 1.05em; }
+  .go.ghost, .tool-btn { background: #fff; }
+  .go:active, .choice:active, .idea:active { transform: translate(2px, 2px); box-shadow: none; }
+  .go:disabled { opacity: .5; cursor: default; transform: none; }
+  .nav-btn {
+    position: absolute; top: 46%; z-index: 12; width: 56px; height: 56px;
+    transform: translateY(-50%); font-size: 28px; line-height: 1; padding: 0;
+  }
+  #prevBtn { left: 16px; }
+  #nextBtn { right: 16px; }
+  #pager {
+    position: absolute; right: 28px; bottom: 16px; z-index: 12;
+    background: #fff; border: 3px solid #2a2a2a; border-radius: 999px;
+    padding: .14em .42em; font-size: .34em; font-weight: 800;
+  }
+  .tools { position: absolute; top: 12px; right: 16px; z-index: 14; display: flex; gap: 8px; }
+  .tool-btn { font-size: 15px; padding: 7px 12px; box-shadow: 2px 2px 0 #2a2a2a; }
+  .tool-btn[aria-pressed="true"] { background: #fff3b0; }
+  #notesPanel {
+    position: absolute; left: 18px; right: 18px; bottom: 14px; z-index: 20;
+    max-height: 38%; display: flex; flex-direction: column;
+    background: #fffdf8; border: 3px solid #2a2a2a; border-radius: 16px;
+    box-shadow: 6px 6px 0 #2a2a2a; padding: 10px 14px 12px;
+  }
+  #notesPanel[hidden] { display: none !important; }
+  .notes-bar { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; }
+  .notes-bar span { font-weight: 700; color: #5c5348; }
+  #notesClose { margin-left: auto; }
+  #notesBody { overflow: auto; font-size: .5em; line-height: 1.55; font-weight: 700; margin-top: .12em; }
+  #quiz, #poem { justify-content: center; }
+  .quiz-word { font-size: 1.45em; font-weight: 900; letter-spacing: .02em; margin: .02em 0 .08em; }
+  .quiz-meta, .feedback, #poemBanner, #ideaPrompt, .lead, .cost {
+    font-size: .4em; font-weight: 800; line-height: 1.4;
+  }
+  .choice-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .2em; }
+  .choice { font-size: .52em; padding: .62em .3em; background: #fff; }
+  .choice.right, .poem-line button.right { background: #d9ffb0; }
+  .choice.wrong, .poem-line button.wrong { background: #ffd0d8; }
+  .feedback.ok { color: #187a3d; }
+  .feedback.no { color: #b42348; }
+  .poem-line { display: grid; grid-template-columns: .7fr 1.3fr; gap: .18em; align-items: center; margin-bottom: .12em; }
+  .poem-line p { margin: 0; font-size: .6em; font-weight: 900; }
+  .blank { display: inline-block; min-width: 2.4em; border-bottom: 4px solid #2a2a2a; text-align: center; color: #5b3fd0; }
+  .poem-line .choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: .1em; }
+  .poem-line button { font-size: .36em; padding: .5em .2em; background: #fff; }
+  .poem-line.solved p { color: #187a3d; }
+  #poemBanner { background: #d9ffb0; border: 3px solid #2a2a2a; border-radius: .3em; padding: .25em .35em; }
+  .chat {
+    flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: .2em;
+    background: #fff; border: 3px solid #2a2a2a; border-radius: .4em; padding: .28em; font-size: .5em;
+  }
+  .bubble { max-width: 86%; border: 3px solid #2a2a2a; border-radius: .35em; padding: .28em .4em; font-weight: 750; line-height: 1.4; }
+  .bubble small { display: block; opacity: .7; font-size: .8em; }
+  .bubble p { margin: .08em 0 0; }
+  .bubble.kid { align-self: flex-end; background: #d7ecff; }
+  .bubble.ai { align-self: flex-start; background: #e7fbd0; }
+  .bad { color: #d23b55; }
+  .good { color: #187a3d; }
+  .area-wrap { position: absolute; inset: .2em; display: grid; grid-template-columns: auto 1fr; gap: .16em; align-items: center; }
+  .vlabel { font-size: .46em; font-weight: 900; text-align: center; line-height: 1.15; }
+  .hlabel { text-align: center; font-size: .4em; font-weight: 900; margin-top: .08em; }
+  .area-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); gap: .08em; width: 100%; aspect-ratio: 6/4; }
+  .area-grid i { border: 3px solid #2a2a2a; border-radius: .12em; background: #fff; }
+  .layer-demo { flex: 1; min-height: 0; }
+  .layer-demo svg { width: 100%; height: 100%; }
+  .obj-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .16em; margin-top: .12em; }
+  .cube-box { display: flex; flex-direction: column; align-items: center; gap: .12em; }
+  .cube { width: 3.15em; height: 3.15em; display: grid; grid-template-columns: repeat(3, 1fr); gap: .07em; background: #2a2a2a; padding: .08em; border-radius: .2em; }
+  .cube i { display: block; border-radius: .08em; }
+  .tiny { font-size: .3em; font-weight: 800; color: #5c5348; }
+  .timebar { display: flex; height: .4em; border: 3px solid #2a2a2a; border-radius: 999px; overflow: hidden; margin-top: .16em; }
+  .timebar .scan { width: 32%; background: #ffd84d; }
+  .timebar .turn { flex: 1; background: #8b6cff; }
+  .time-labels { display: flex; justify-content: space-between; font-size: .34em; font-weight: 800; margin-top: .08em; }
+  .end-card {
+    margin-top: .15em; background: #ffd84d; border: 3px solid #2a2a2a; border-radius: .4em;
+    box-shadow: 5px 5px 0 #2a2a2a; padding: .28em .35em; font-size: .58em; font-weight: 900; line-height: 1.35;
+  }
+  .chat-mock { display: flex; flex-direction: column; gap: .16em; }
+  .chat-mock p {
+    margin: 0; max-width: 95%; border: 3px solid #2a2a2a; border-radius: .35em;
+    padding: .22em .3em; font-size: .4em; font-weight: 800; line-height: 1.4;
+  }
+  .chat-mock .me { align-self: flex-end; background: #d7ecff; }
+  .chat-mock .ai { align-self: flex-start; background: #e7fbd0; }
+  .warn {
+    margin-top: .14em; background: #fff3b0; border: 3px solid #2a2a2a; border-radius: .3em;
+    padding: .16em .24em; font-size: .36em; font-weight: 800;
+  }
+  .bars { display: flex; align-items: flex-end; gap: 4px; height: 28px; }
+  .bars i { width: 7px; height: 10px; background: #2a2a2a; display: block; border-radius: 4px; animation: bar 1s ease-in-out infinite; }
+  .bars i:nth-child(2) { animation-delay: .15s; }
+  .bars i:nth-child(3) { animation-delay: .3s; }
+  @keyframes bar { 50% { height: 28px; } }
+  .shake { animation: shake .4s ease; }
+  @keyframes shake {
+    20% { transform: translateX(-6px); } 40% { transform: translateX(6px); }
+    60% { transform: translateX(-3px); } 80% { transform: translateX(3px); }
+  }
+  .nudge { animation: nudge 1.15s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateY(-3px); } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+  body.phone #stage { border: none; border-radius: 0; box-shadow: none; }
+  body.phone .slide-inner { overflow: auto; padding: 54px 14px 78px; }
+  body.phone h1 { font-size: 1.35em; }
+  body.phone .cover, body.phone .split, body.phone .lab,
+  body.phone .cards, body.phone .cards-4, body.phone .cards-5, body.phone .cards-3,
+  body.phone .ideas, body.phone .mini-grid, body.phone .obj-row, body.phone .choice-row,
+  body.phone .poem-line { grid-template-columns: 1fr; }
+  body.phone .nav-btn { top: auto; bottom: 12px; transform: none; width: 48px; height: 48px; min-width: 48px; min-height: 48px; font-size: 22px; }
+  body.phone .go, body.phone .choice, body.phone .poem-line button, body.phone .tool-btn, body.phone .idea {
+    font-size: 16px; min-height: 44px; padding: 10px 14px;
+  }
+  body.phone #prevBtn { left: calc(50% - 58px); }
+  body.phone #nextBtn { left: calc(50% + 12px); right: auto; }
+  body.phone #pager { right: 12px; bottom: 66px; }
+  body.phone .mascot-svg, body.phone .hero-svg { max-height: 220px; }
+  body.phone .lab-art { min-height: 200px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="bot" viewBox="0 0 300 340">
+    <ellipse cx="150" cy="314" rx="92" ry="16" fill="#f0d2b0"/>
+    <line x1="150" y1="46" x2="150" y2="16" stroke="#2a2a2a" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="150" cy="14" r="11" fill="#ff5d73" stroke="#2a2a2a" stroke-width="4"/>
+    <rect x="68" y="46" width="164" height="132" rx="50" fill="#ffd84d" stroke="#2a2a2a" stroke-width="6"/>
+    <circle cx="116" cy="108" r="16" fill="#2a2a2a"/><circle cx="184" cy="108" r="16" fill="#2a2a2a"/>
+    <circle cx="122" cy="102" r="5" fill="#fff"/><circle cx="190" cy="102" r="5" fill="#fff"/>
+    <path d="M116 146 Q150 170 184 146" fill="none" stroke="#2a2a2a" stroke-width="6" stroke-linecap="round"/>
+    <rect x="96" y="186" width="108" height="92" rx="28" fill="#4c9aff" stroke="#2a2a2a" stroke-width="6"/>
+    <circle cx="150" cy="230" r="16" fill="#fff" stroke="#2a2a2a" stroke-width="4"/>
+    <path d="M96 216 L46 178" stroke="#2a2a2a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M204 210 L258 158" stroke="#2a2a2a" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="42" cy="174" r="14" fill="#ff8a3d" stroke="#2a2a2a" stroke-width="4"/>
+    <circle cx="262" cy="154" r="14" fill="#ff8a3d" stroke="#2a2a2a" stroke-width="4"/>
+    <rect x="118" y="276" width="22" height="28" rx="8" fill="#2a2a2a"/>
+    <rect x="162" y="276" width="22" height="28" rx="8" fill="#2a2a2a"/>
+  </symbol>
+</svg>
+<div id="stage">
+  <div id="progress"><span></span></div>
+  <div class="tools">
+    <button type="button" class="tool-btn" id="notesBtn" aria-pressed="false">讲稿</button>
+    <button type="button" class="tool-btn" id="fullBtn">全屏</button>
+  </div>
+
+  <section class="slide active" id="s1" data-tone="sun" data-title="AI 是我们的好帮手" aria-label="封面">
+    <div class="slide-inner">
+      <div class="cover">
+        <div>
+          <p class="kicker">五三班分享</p>
+          <h1>AI 是我们的<br>好帮手</h1>
+          <p class="sub">给五三班小朋友的分享</p>
+          <div class="pills"><span>大约 20 分钟</span><span>可以一起点</span></div>
+          <p class="hint">→ 翻页　　N 讲稿</p>
+        </div>
+        <svg class="mascot-svg floaty" viewBox="0 0 300 340" aria-hidden="true"><use href="#bot"/></svg>
+      </div>
+    </div>
+    <aside class="notes">大家好，我是××的妈妈。今天大约二十分钟，我想和五三班聊聊：学习和生活里，我们可以怎样使用 AI。它不是魔法，是一个帮手。有的页面还能请同学上来点一点。</aside>
+  </section>
+
+  <section class="slide" id="s2" data-tone="sky" data-title="AI 是一个小助手">
+    <div class="slide-inner">
+      <p class="kicker">先认识它</p>
+      <h1>AI 是一个小助手</h1>
+      <div class="cards-3 fill">
+        <article class="card"><div class="sticker">书</div><h3>读过很多例子</h3><p>它从大量例子里学习，再来回答新问题。</p></article>
+        <article class="card"><div class="sticker" style="background:#4c9aff">快</div><h3>回答特别快</h3><p>出题、总结、画图，它几秒钟就能给一稿。</p></article>
+        <article class="card"><div class="sticker" style="background:#ff8fab">查</div><h3>也会说错</h3><p>所以我们要做小老师，帮它检查。</p></article>
+      </div>
+    </div>
+    <aside class="notes">先用一句话说完。AI 就是人工智能。可以把它想成一个读过很多书、看过很多例子的小助手：你提问，它根据学过的东西来回答。它很快，可是也会说错。所以我们要做小老师，帮它检查。</aside>
+  </section>
+
+  <section class="slide" id="s3" data-tone="mint" data-title="生活里到处都有 AI">
+    <div class="slide-inner">
+      <p class="kicker">它就在身边</p>
+      <h1>生活里到处都有 AI</h1>
+      <div class="cards fill">
+        <article class="card"><div class="sticker" style="background:#ff8fab"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="24" y="8" width="16" height="28" rx="8" fill="#fff" stroke="#2a2a2a" stroke-width="3"/><path d="M16 28a16 16 0 0 0 32 0M32 44v8M24 54h16" fill="none" stroke="#2a2a2a" stroke-width="3" stroke-linecap="round"/></svg></div><h3>语音助手</h3><p>对它说话，问天气、定闹钟。</p></article>
+        <article class="card"><div class="sticker" style="background:#4c9aff"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56s16-14 16-28A16 16 0 1 0 16 28c0 14 16 28 16 28z" fill="#fff" stroke="#2a2a2a" stroke-width="3"/><circle cx="32" cy="26" r="6" fill="#ff5d73"/></svg></div><h3>导航</h3><p>帮大人看路况，选一条能走的路。</p></article>
+        <article class="card"><div class="sticker" style="background:#7bd66a"><svg viewBox="0 0 64 64" aria-hidden="true"><text x="6" y="42" font-size="28" font-weight="800" fill="#2a2a2a">文A</text></svg></div><h3>翻译</h3><p>看不懂的句子，可以先请它翻译。</p></article>
+        <article class="card"><div class="sticker"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8l6 14h15l-12 9 5 15-14-9-14 9 5-15-12-9h15z" fill="#fff" stroke="#2a2a2a" stroke-width="3" stroke-linejoin="round"/></svg></div><h3>推荐</h3><p>看视频时，它会猜你可能喜欢什么。</p></article>
+      </div>
+    </div>
+    <aside class="notes">AI 其实早就在我们身边。对手机说话，是语音助手；开车找路，是导航；看不懂的英语可以翻译；刷视频时，它还会猜你喜欢什么。用过其中一种的小朋友，举个手给我看看。</aside>
+  </section>
+
+  <section class="slide" id="s4" data-tone="coral" data-title="请 AI 做一张学习网页">
+    <div class="slide-inner">
+      <p class="kicker">案例一 · 学习网页</p>
+      <h1>请 AI 做一张学习网页</h1>
+      <div class="split">
+        <div class="chat-mock">
+          <p class="me">请做一个五年级英语单词小测验。按钮要大，点一下马上知道对错。</p>
+          <p class="ai">好呀。我来做一页给五三班的练习，一共 5 个单词。</p>
+        </div>
+        <div class="card" style="align-items:flex-start;text-align:left;padding:.4em">
+          <h3>下一页不是图片</h3>
+          <p style="font-size:.42em">那一页真的可以点。请一位同学上来，我们一起玩。</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">第一个例子：请 AI 做一张学习网页。你看这句话，请做一个五年级英语单词小测验，点一下就知道对错。它就能把网页写出来。下一页不是截图，是真的可以点。</aside>
+  </section>
+
+  <section class="slide" id="s5" data-tone="coral" data-title="英语单词，点一点">
+    <div class="slide-inner">
+      <p class="kicker">案例一 · 单词测验</p>
+      <h1>英语单词，点一点</h1>
+      <div id="quiz" class="fill"></div>
+    </div>
+    <aside class="notes">我们请一位同学上来点。先一起读单词，再选意思。点下去马上知道对不对。错了也很好，正确答案会留下来。如果读音没把握，就请英语课代表带读。polite 是有礼貌的，delicious 是美味的，weekend 是周末，healthy 是健康的，library 是图书馆。请 AI 出题给我们练，和请它把作业写好，是两件不一样的事。</aside>
+  </section>
+
+  <section class="slide" id="s6" data-tone="orange" data-title="学习时还能帮这三忙">
+    <div class="slide-inner">
+      <p class="kicker">案例一 · 还能这样学</p>
+      <h1>学习时还能帮这三忙</h1>
+      <div class="cards-3 fill">
+        <article class="card"><div class="bars" aria-hidden="true"><i></i><i></i><i></i></div><h3>跟读纠音</h3><p>你读一个单词，它听，再告诉你哪里不够像。</p></article>
+        <article class="card"><div class="sticker" style="background:#4c9aff">要</div><h3>长课文总结</h3><p>先列出三五个要点，再回课文里核对。</p></article>
+        <article class="card"><div class="sticker" style="background:#ff8fab">卷</div><h3>错题变成练习</h3><p>按类型收成一张小卷，然后自己再做一遍。</p></article>
+      </div>
+      <p class="warn">要点要回课文核对。练习卷要自己做，不要只看答案。</p>
+    </div>
+    <aside class="notes">除了做测验，AI 还能做三件事。跟读时，它听你的发音，告诉你哪里不像。课文很长，它可以先列要点，你再回课文核对。做错的题，它可以按类型收成一张小卷，然后要自己再做一遍。提醒大家看最下面这句黄字。</aside>
+  </section>
+
+  <section class="slide" id="s7" data-tone="sun" data-title="背静夜思，它来出题">
+    <div class="slide-inner">
+      <p class="kicker">案例一 · 背古诗</p>
+      <h1>背《静夜思》，它来出题</h1>
+      <div class="fill" id="poem">
+        <div class="poem-line" data-answer="月光"><p>床前明<span class="blank">　　</span>，</p><div class="choices"><button type="button">阳光</button><button type="button">月光</button><button type="button">星星</button></div></div>
+        <div class="poem-line" data-answer="霜"><p>疑是地上<span class="blank">　　</span>。</p><div class="choices"><button type="button">雪</button><button type="button">雨</button><button type="button">霜</button></div></div>
+        <div class="poem-line" data-answer="明月"><p>举头望<span class="blank">　　</span>，</p><div class="choices"><button type="button">太阳</button><button type="button">明月</button><button type="button">星星</button></div></div>
+        <div class="poem-line" data-answer="故乡"><p>低头思<span class="blank">　　</span>。</p><div class="choices"><button type="button">家乡</button><button type="button">学校</button><button type="button">故乡</button></div></div>
+        <p id="poemBanner" hidden>全对啦。李白的《静夜思》，你记住了。</p>
+      </div>
+    </div>
+    <aside class="notes">背古诗也可以请 AI 出填空。今天用《静夜思》，因为大家都会。请一位同学来填。如果犹豫，就小声把整首诗念出来：床前明月光，疑是地上霜，举头望明月，低头思故乡。诗里用的是“故乡”，不是“家乡”。</aside>
+  </section>
+
+  <section class="slide" id="s8" data-tone="mint" data-title="说错了，它会温柔地改">
+    <div class="slide-inner">
+      <p class="kicker">案例一 · 口语陪练</p>
+      <h1>说错了，它会温柔地改</h1>
+      <div id="chatLog" class="chat" aria-live="polite"></div>
+      <div class="row-actions" style="margin-top:.16em"><button type="button" class="go nudge" id="replayTalk">再看一遍</button></div>
+    </div>
+    <aside class="notes">口语不一定要等外教。看这段对话：AI 没有笑话说错的人，而是先鼓励，再改一个词。第一句 goed 要改成 went。第二句 She don't 要改成 She doesn't。请大家找一找它改了哪个词。</aside>
+  </section>
+
+  <section class="slide" id="s9" data-tone="grape" data-title="把算式画成会动的图">
+    <div class="slide-inner">
+      <p class="kicker">案例二 · 数形结合</p>
+      <h1>把算式画成会动的图</h1>
+      <p class="problem">每点一次，图变一步，算式也多一行。请帮我看：图和算式是不是同一件事。</p>
+      <div class="mini-grid">
+        <div><b>1</b>圆滚一圈</div>
+        <div><b>2</b>方格铺面积</div>
+        <div><b>3</b>蛋糕分数</div>
+        <div><b>4</b>钢笔方程</div>
+        <div><b>5</b>梯形拼图</div>
+        <div><b>6</b>石头体积</div>
+      </div>
+    </div>
+    <aside class="notes">数学有时候看着像一排符号。我们可以让 AI 把算式画成图。点一下，图动一步，算式也多一行。这叫数形结合。后面有 6 个小动画，请大家帮我盯着：图和算式是不是在说同一件事。</aside>
+  </section>
+
+  <section class="slide" id="s10" data-tone="grape" data-title="圆滚一圈，有多长">
+    <div class="slide-inner">
+      <p class="kicker">案例二 · 圆周率</p>
+      <h1>圆滚一圈，有多长</h1>
+      <div class="lab" id="piLab">
+        <div class="lab-art" id="piArt"></div>
+        <div class="lab-side">
+          <ol class="steps" id="piSteps"></ol>
+          <div class="lab-actions">
+            <button type="button" class="go nudge" id="piNext">下一步</button>
+            <button type="button" class="go ghost" id="piReset">再看一遍</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">看这个圆。我先点出直径，再让它沿直线滚一圈。滚过的长度大约是三条直径，还多一小截，所以大约是 3.14 倍。如果有孩子说正好 3 倍，就指给她看多出来的那一截。这个倍数叫圆周率。六年级会正式学圆的周长，今天先把现象看在眼里。</aside>
+  </section>
+
+  <section class="slide" id="s11" data-tone="grape" data-title="一排一排铺满">
+    <div class="slide-inner">
+      <p class="kicker">案例二 · 面积</p>
+      <h1>一排一排铺满</h1>
+      <p class="problem">长方形长 6 格、宽 4 格。面积就是里面有多少个同样大的小方格。</p>
+      <div class="lab" id="areaLab">
+        <div class="lab-art">
+          <div class="area-wrap">
+            <div class="vlabel">宽<br>4</div>
+            <div>
+              <div id="areaGrid" class="area-grid"></div>
+              <div class="hlabel">长 6</div>
+            </div>
+          </div>
+        </div>
+        <div class="lab-side">
+          <ol class="steps" id="areaSteps"></ol>
+          <div class="lab-actions">
+            <button type="button" class="go nudge" id="areaNext">铺下一排</button>
+            <button type="button" class="go ghost" id="areaReset">再看一遍</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">长方形的面积，就是里面能铺多少个一样大的小方格。这个长 6 格、宽 4 格。我们一排一排铺。不用一个一个数到最后，铺完就是 6 乘 4 等于 24。面积等于长乘宽。</aside>
+  </section>
+
+  <section class="slide" id="s12" data-tone="orange" data-title="蛋糕还剩几分之几">
+    <div class="slide-inner">
+      <p class="kicker">案例二 · 分数</p>
+      <h1>蛋糕还剩几分之几</h1>
+      <p class="problem">一个蛋糕平均切成 8 块。小明吃了 3 块，小红吃了 2 块。还剩几分之几？</p>
+      <div class="lab" id="cakeLab"><div class="lab-art"></div><div class="lab-side"><ol class="steps"></ol><div class="lab-actions"><button type="button" class="go nudge">下一步</button><button type="button" class="go ghost replay">再看一遍</button></div></div></div>
+    </div>
+    <aside class="notes">这道分数很像课本里的题。蛋糕平均切成 8 块，小明吃 3 块，小红吃 2 块。先别喊答案。我每点一次，大家看少掉的是谁的。粉色是小明，橙色是小红，最后亮起来的是剩下的。剩下 3 块，就是 3/8。</aside>
+  </section>
+
+  <section class="slide" id="s13" data-tone="sky" data-title="一支钢笔多少元">
+    <div class="slide-inner">
+      <p class="kicker">案例二 · 方程</p>
+      <h1>一支钢笔多少元</h1>
+      <p class="problem">3 支钢笔和一本 8 元的笔记本，一共 29 元。一支钢笔多少元？</p>
+      <div class="lab" id="eqLab"><div class="lab-art"></div><div class="lab-side"><ol class="steps"></ol><div class="lab-actions"><button type="button" class="go nudge">下一步</button><button type="button" class="go ghost replay">再看一遍</button></div></div></div>
+    </div>
+    <aside class="notes">这是简易方程。我们用 x 表示一支钢笔的价钱。线段上是三段一样的 x，再加一段 8，总共 29。两边都去掉 8，得到 3x 等于 21。21 平均分成 3 份，x 等于 7。最后一定要验算：3 乘 7 再加 8，正好是 29。</aside>
+  </section>
+
+  <section class="slide" id="s14" data-tone="grape" data-title="两个梯形拼一拼">
+    <div class="slide-inner">
+      <p class="kicker">案例二 · 梯形</p>
+      <h1>两个梯形拼一拼</h1>
+      <p class="problem">梯形上底 4 米，下底 8 米，高 5 米。它的面积是多少？</p>
+      <div class="lab" id="trapLab"><div class="lab-art"></div><div class="lab-side"><ol class="steps"></ol><div class="lab-actions"><button type="button" class="go nudge">下一步</button><button type="button" class="go ghost replay">再看一遍</button></div></div></div>
+    </div>
+    <aside class="notes">梯形不要急着背公式。看课本里的办法：两个完全一样的梯形，拼成一个平行四边形。上底 4、下底 8、高 5。拼好以后底是 12，高还是 5，面积 12 乘 5 等于 60。一个梯形是一半，60 除以 2 等于 30 平方米。也就是上底加下底的和，乘高，再除以 2。</aside>
+  </section>
+
+  <section class="slide" id="s15" data-tone="sky" data-title="石头占了多大地方">
+    <div class="slide-inner">
+      <p class="kicker">案例二 · 体积</p>
+      <h1>石头占了多大地方</h1>
+      <p class="problem">水缸长 20 厘米、宽 10 厘米。放入石头后，水面升高 3 厘米。石头的体积是多少？</p>
+      <div class="lab" id="volLab"><div class="lab-art"></div><div class="lab-side"><ol class="steps"></ol><div class="lab-actions"><button type="button" class="go nudge">下一步</button><button type="button" class="go ghost replay">再看一遍</button></div></div></div>
+    </div>
+    <aside class="notes">石头弯弯扭扭，不好直接量。放进水缸，水面升高 3 厘米。升高的那一层水，原来的位置被石头占掉了，所以这一层水的体积就是石头的体积。长 20、宽 10、高 3，乘起来是 600 立方厘米。</aside>
+  </section>
+
+  <section class="slide" id="s16" data-tone="grape" data-title="一只小猫笔筒">
+    <div class="slide-inner">
+      <p class="kicker">案例三 · 3D 打印</p>
+      <h1>一只小猫笔筒</h1>
+      <div class="split">
+        <svg class="hero-svg" viewBox="0 0 520 560" role="img" aria-label="紫色小猫笔筒，正面写着五三班">
+          <ellipse cx="250" cy="512" rx="150" ry="18" fill="#f0d8be"/>
+          <path d="M145 230 L112 92 L210 198 Z" fill="#6e56e8" stroke="#2a2a2a" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M355 230 L388 92 L290 198 Z" fill="#6e56e8" stroke="#2a2a2a" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M156 206 L138 128 L198 186 Z" fill="#ffb3c7"/>
+          <path d="M344 206 L362 128 L302 186 Z" fill="#ffb3c7"/>
+          <path d="M118 214 h264 v176 c0 78 -58 112 -132 112 s-132 -34 -132 -112 z" fill="#7c5cff" stroke="#2a2a2a" stroke-width="5"/>
+          <ellipse cx="250" cy="214" rx="132" ry="36" fill="#7c5cff" stroke="#2a2a2a" stroke-width="5"/>
+          <ellipse cx="250" cy="214" rx="98" ry="24" fill="#5436c9" stroke="#2a2a2a" stroke-width="4"/>
+          <rect x="214" y="78" width="14" height="120" rx="6" fill="#ff5d73" stroke="#2a2a2a" stroke-width="3" transform="rotate(-8 221 130)"/>
+          <rect x="268" y="64" width="14" height="136" rx="6" fill="#ffd84d" stroke="#2a2a2a" stroke-width="3"/>
+          <rect x="312" y="90" width="14" height="112" rx="6" fill="#4c9aff" stroke="#2a2a2a" stroke-width="3" transform="rotate(7 319 140)"/>
+          <ellipse cx="202" cy="318" rx="14" ry="18" fill="#2a2a2a"/>
+          <ellipse cx="298" cy="318" rx="14" ry="18" fill="#2a2a2a"/>
+          <ellipse cx="207" cy="312" rx="4" ry="5" fill="#fff"/>
+          <ellipse cx="303" cy="312" rx="4" ry="5" fill="#fff"/>
+          <path d="M250 344 l-12 16 h24 z" fill="#ff5d73" stroke="#2a2a2a" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M70 330 H150 M80 358 H150 M350 330 H432 M350 358 H424" stroke="#2a2a2a" stroke-width="4" stroke-linecap="round"/>
+          <path d="M232 372 q18 14 36 0" fill="none" stroke="#2a2a2a" stroke-width="3" stroke-linecap="round"/>
+          <rect x="164" y="402" width="172" height="52" rx="16" fill="#fff7ec" stroke="#2a2a2a" stroke-width="4"/>
+          <text x="250" y="438" text-anchor="middle" font-size="32" font-weight="800" fill="#5436c9">五三班</text>
+        </svg>
+        <ol class="flow">
+          <li><b>1</b><div><span>想法</span><small>我要一只紫色小猫笔筒</small></div></li>
+          <li><b>2</b><div><span>AI 生成模型</span><small>猫耳、猫脸，还有「五三班」</small></div></li>
+          <li><b>3</b><div><span>切片</span><small>把模型切成很多薄薄的一层</small></div></li>
+          <li><b>4</b><div><span>打印</span><small>打印机一层一层把它做出来</small></div></li>
+          <li><b>5</b><div><span>成品</span><small>凉透以后，就可以插笔</small></div></li>
+        </ol>
+      </div>
+    </div>
+    <aside class="notes">第三个例子，把 AI 和 3D 打印连在一起。我想要一个紫色小猫笔筒，有猫耳朵、有猫脸，正面还刻着五三班。先说出想法，请 AI 生成立体模型，再切片，也就是切成很多薄层，然后打印机一层一层做出来。最后就能插笔了。这张图是按这个想法画的示意。</aside>
+  </section>
+
+  <section class="slide" id="s17" data-tone="grape" data-title="一层一层堆出来">
+    <div class="slide-inner">
+      <p class="kicker">案例三 · 打印原理</p>
+      <h1>一层一层堆出来</h1>
+      <p class="problem">像挤奶油：材料挤出来，固定住，再往上铺下一层。</p>
+      <div id="layerDemo" class="layer-demo"></div>
+      <div class="row-actions"><button type="button" class="go nudge" id="layerBtn">铺下一层</button><button type="button" class="go ghost" id="layerReset">再看一遍</button></div>
+      <div class="obj-row">
+        <div class="obj"><strong>手机支架</strong><span>把手机支起来</span></div>
+        <div class="obj"><strong>姓名牌</strong><span>写上自己的名字</span></div>
+        <div class="obj"><strong>小挂钩</strong><span>挂钥匙或书包</span></div>
+        <div class="obj"><strong>象棋子</strong><span>缺一颗就补一颗</span></div>
+      </div>
+    </div>
+    <aside class="notes">3D 打印不是变魔术。打印头把热热的材料挤出来，先铺第一层，凉了固定，再铺上面一层，一直堆到想要的形状。除了笔筒，还可以做手机支架、姓名牌、小挂钩。想清楚要做什么，再请 AI 帮忙设计。</aside>
+  </section>
+
+  <section class="slide" id="s18" data-tone="sky" data-title="会解魔方的 CUBOTino">
+    <div class="slide-inner">
+      <p class="kicker">案例四 · 机器人</p>
+      <h1>会解魔方的 CUBOTino</h1>
+      <div class="split">
+        <svg class="hero-svg" viewBox="0 0 300 340" aria-hidden="true"><use href="#bot"/></svg>
+        <div class="cube-box">
+          <div class="cube" id="cube" aria-hidden="true"></div>
+          <button type="button" class="go nudge" id="cubeBtn">转一下</button>
+          <p class="tiny">示意动画：看颜色、想步骤、再转动</p>
+          <p class="problem" style="text-align:center">大约 90 秒还原一个魔方<br>意大利工程师 Andrea Favero 设计，做法公开</p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">最后一个例子有点酷。这个小机器人叫 CUBOTino，是意大利工程师 Andrea Favero 设计的。他把做法公开了，所以叫开源，别人也可以照着做。它大约 90 秒能还原一个魔方。我们可以点「转一下」，这是示意，不是真的在解桌上的魔方。下一页看它靠什么做到。</aside>
+  </section>
+
+  <section class="slide" id="s19" data-tone="sky" data-title="眼睛看，脑子想，手来转">
+    <div class="slide-inner">
+      <p class="kicker">案例四 · 怎么做到的</p>
+      <h1>眼睛看，脑子想，手来转</h1>
+      <ol class="how fill">
+        <li><b>眼</b><div><strong>摄像头 + OpenCV</strong><em>先给六面拍下来，认出每种颜色</em></div></li>
+        <li><b>脑</b><div><strong>树莓派 Zero 2 W</strong><em>很小的电脑，用 Kociemba 算法想好转法</em></div></li>
+        <li><b>手</b><div><strong>两个舵机</strong><em>负责把魔方转到位</em></div></li>
+        <li><b>钱</b><div><strong>大约 40–100 欧元</strong><em>材料费会跟着零件价格变化</em></div></li>
+      </ol>
+      <div class="timebar" aria-hidden="true"><i class="scan"></i><i class="turn"></i></div>
+      <div class="time-labels"><span>扫描约 20–30 秒</span><span>转动约 60–70 秒</span></div>
+    </div>
+    <aside class="notes">它的脑袋是一块很小的电脑，叫树莓派 Zero 2 W。眼睛是摄像头，用 OpenCV 这种看图的方法认出颜色。然后用 Kociemba 算法算出该怎么转。两只手其实是两个舵机。扫描大约 20 到 30 秒，转动大约 60 到 70 秒，加起来大约 90 秒。材料费大约 40 到 100 欧元。人把方法想好，机器帮着看、帮着转。</aside>
+  </section>
+
+  <section class="slide" id="s20" data-tone="sun" data-title="以后，AI 还会帮这些忙">
+    <div class="slide-inner">
+      <p class="kicker">以后的生活</p>
+      <h1>以后，AI 还会帮这些忙</h1>
+      <div class="cards-5 fill">
+        <article class="card"><div class="sticker" style="background:#4c9aff">车</div><h3>自动驾驶</h3><p>汽车自己认路，人还要负责。</p></article>
+        <article class="card"><div class="sticker" style="background:#ff8fab">医</div><h3>AI 医生助手</h3><p>帮医生看结果，决定的是医生。</p></article>
+        <article class="card"><div class="sticker" style="background:#7bd66a">家</div><h3>智能家居</h3><p>灯和空调可以听懂话。</p></article>
+        <article class="card"><div class="sticker">师</div><h3>AI 老师</h3><p>练习可以适合每一个人。</p></article>
+        <article class="card"><div class="sticker" style="background:#ffb084">扫</div><h3>家务机器人</h3><p>帮忙扫地、收拾。</p></article>
+      </div>
+    </div>
+    <aside class="notes">以后 AI 还会帮更多忙。汽车可以自己认路。医生可以请它帮忙看检查结果，但决定还是医生做。家里的灯和空调可以听懂话。老师可以用它给每个同学准备适合自己的练习。机器人也能帮忙扫地。它们是帮手。重要的决定，还是要人来做。</aside>
+  </section>
+
+  <section class="slide" id="s21" data-tone="mint" data-title="使用 AI 的四条约定">
+    <div class="slide-inner">
+      <p class="kicker">我们的约定</p>
+      <h1>使用 AI 的四条约定</h1>
+      <div class="cards fill">
+        <article class="card"><div class="sticker">1</div><h3>会出错，要核对</h3><p>算式、课文、新闻，都要动脑看一遍。</p></article>
+        <article class="card"><div class="sticker" style="background:#ff8fab">2</div><h3>不直接当作业</h3><p>老师想看的是你的思考，不是复制。</p></article>
+        <article class="card"><div class="sticker" style="background:#4c9aff">3</div><h3>保护隐私</h3><p>地址、电话、密码、同学照片，不要随便告诉它。</p></article>
+        <article class="card"><div class="sticker" style="background:#7bd66a">4</div><h3>思考最重要</h3><p>AI 是工具。先想，再问，再检查。</p></article>
+      </div>
+    </div>
+    <aside class="notes">最后约定四件事。第一，AI 会出错，算式、课文都要核对。第二，不要把 AI 的答案直接抄成作业。第三，家里的地址、电话、密码，还有同学的照片，不要随便发给它。第四，AI 是工具，你的脑子才是最重要的。先想，再问，再检查。</aside>
+  </section>
+
+  <section class="slide" id="s22" data-tone="coral" data-title="你最想让 AI 帮你做什么">
+    <div class="slide-inner">
+      <p class="kicker">轮到你们</p>
+      <h1>你最想让 AI 帮你做什么？</h1>
+      <div class="ideas">
+        <button type="button" class="idea" data-idea="练英语口语"><strong>练英语口语</strong><span>我自己会开口说</span></button>
+        <button type="button" class="idea" data-idea="出数学题"><strong>出数学题</strong><span>我自己会算一遍</span></button>
+        <button type="button" class="idea" data-idea="讲一个故事"><strong>讲一个故事</strong><span>我自己会改结局</span></button>
+        <button type="button" class="idea" data-idea="设计小发明"><strong>设计小发明</strong><span>我自己会说清想法</span></button>
+        <button type="button" class="idea" data-idea="检查错题"><strong>检查错题</strong><span>我自己会再做一次</span></button>
+        <button type="button" class="idea" data-idea="做一件我说的事"><strong>我说一件自己的</strong><span>先想好，再告诉大家</span></button>
+      </div>
+      <p id="ideaPrompt" class="lead">点一张卡片，或者直接举手。请补上后半句：这件事，我自己还要做什么。</p>
+    </div>
+    <aside class="notes">现在轮到你们。你最想让 AI 帮你做什么？可以点一张卡片，也可以自己说。我请三位同学。请顺便补上后半句：这件事，我自己还要做什么。这样 AI 就是帮手，不是替你完成的人。</aside>
+  </section>
+
+  <section class="slide" id="s23" data-tone="sun" data-title="谢谢五三班">
+    <div class="slide-inner">
+      <div class="split">
+        <div>
+          <p class="kicker">谢谢</p>
+          <h1>谢谢五三班</h1>
+          <p class="end-card">先自己想一想，再请 AI 当你的帮手。</p>
+          <p class="problem">你们的好奇心，比任何机器人都珍贵。</p>
+        </div>
+        <svg class="mascot-svg floaty" viewBox="0 0 300 340" aria-hidden="true"><use href="#bot"/></svg>
+      </div>
+    </div>
+    <aside class="notes">谢谢五三班的小朋友，也谢谢老师给我这个时间和大家见面。希望你们记住今天最后这一句：先自己想一想，再请 AI 当帮手。你们的好奇心，比任何机器人都珍贵。谢谢大家！</aside>
+  </section>
+
+  <button type="button" class="nav-btn" id="prevBtn" aria-label="上一页">‹</button>
+  <button type="button" class="nav-btn" id="nextBtn" aria-label="下一页">›</button>
+  <div id="pager" aria-live="polite">1 / 23</div>
+  <div id="notesPanel" hidden>
+    <div class="notes-bar"><strong>讲稿</strong><span>← → 翻页 · N 关闭 · F 全屏</span><button type="button" class="go ghost" id="notesClose">收起</button></div>
+    <div id="notesBody"></div>
+  </div>
+</div>
+<script>
+(function () {
+  const stage = document.getElementById('stage');
+  const slides = [...document.querySelectorAll('.slide')];
+  const pager = document.getElementById('pager');
+  const progress = document.querySelector('#progress > span');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const notesBtn = document.getElementById('notesBtn');
+  const notesPanel = document.getElementById('notesPanel');
+  const notesBody = document.getElementById('notesBody');
+  let index = 0;
+  let notesOpen = false;
+  let talkTimers = [];
+
+  function layout() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const phone = vw < 820;
+    document.body.classList.toggle('phone', phone);
+    if (!phone) return;
+    stage.style.width = vw + 'px';
+    stage.style.height = vh + 'px';
+    stage.style.fontSize = Math.max(17, Math.min(22, vw / 20)) + 'px';
+  }
+
+  function readNotes(slide) {
+    return slide.querySelector('.notes').textContent.replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').trim();
+  }
+
+  function show(n) {
+    const next = Math.max(0, Math.min(slides.length - 1, n));
+    stage.classList.toggle('back', next < index);
+    index = next;
+    slides.forEach((s, i) => {
+      const on = i === index;
+      s.classList.toggle('active', on);
+      s.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+    pager.textContent = (index + 1) + ' / ' + slides.length;
+    progress.style.width = ((index + 1) / slides.length * 100) + '%';
+    document.title = (index + 1) + '/' + slides.length + ' ' + slides[index].dataset.title;
+    notesBody.textContent = readNotes(slides[index]);
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === slides.length - 1;
+    if (slides[index].id === 's8') playTalk();
+    else clearTalk();
+  }
+
+  function toggleNotes(force) {
+    notesOpen = typeof force === 'boolean' ? force : !notesOpen;
+    notesPanel.hidden = !notesOpen;
+    stage.classList.toggle('notes-open', notesOpen);
+    notesBtn.setAttribute('aria-pressed', String(notesOpen));
+  }
+
+  function toggleFull() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    const k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown') { e.preventDefault(); show(index + 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); show(index - 1); }
+    else if (k === 'Home') { e.preventDefault(); show(0); }
+    else if (k === 'End') { e.preventDefault(); show(slides.length - 1); }
+    else if (k === 'n' || k === 'N') { e.preventDefault(); toggleNotes(); }
+    else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFull(); }
+    else if (k === 'Escape' && notesOpen) toggleNotes(false);
+  });
+  prevBtn.addEventListener('click', () => show(index - 1));
+  nextBtn.addEventListener('click', () => show(index + 1));
+  notesBtn.addEventListener('click', () => toggleNotes());
+  document.getElementById('notesClose').addEventListener('click', () => toggleNotes(false));
+  document.getElementById('fullBtn').addEventListener('click', toggleFull);
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn) btn.classList.remove('nudge');
+  });
+
+  let touchX = 0, touchY = 0;
+  stage.addEventListener('touchstart', (e) => {
+    if (e.target.closest('button, .notes-panel, .steps, .chat')) return;
+    touchX = e.touches[0].clientX;
+    touchY = e.touches[0].clientY;
+  }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    if (!touchX) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    const dy = e.changedTouches[0].clientY - touchY;
+    touchX = 0;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.2) show(index + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  function frac(a, b) {
+    return '<span class="frac"><b>' + a + '</b><i></i><b>' + b + '</b></span>';
+  }
+  function initStepper(rootId, lines, draw) {
+    const root = document.getElementById(rootId);
+    const art = root.querySelector('.lab-art');
+    const list = root.querySelector('.steps');
+    const next = root.querySelector('.go:not(.ghost)');
+    const reset = root.querySelector('.replay');
+    let step = 0;
+    function paint() {
+      art.innerHTML = draw(step);
+      if (step === 0) list.innerHTML = '<li class="wait">点「下一步」，图会变，算式会跟着出现。</li>';
+      else list.innerHTML = lines.slice(0, step).map((t, i) => {
+        const done = step === lines.length && i === lines.length - 1;
+        const fresh = i === step - 1;
+        return '<li class="' + (done ? 'final ' : '') + (fresh ? 'fresh' : '') + '">' + t + '</li>';
+      }).join('');
+      next.disabled = step >= lines.length;
+      next.textContent = step >= lines.length ? '完成啦' : '下一步';
+    }
+    next.addEventListener('click', () => { if (step < lines.length) { step += 1; paint(); } });
+    reset.addEventListener('click', () => { step = 0; paint(); });
+    paint();
+  }
+
+  const QUESTIONS = [
+    { word: 'polite', options: ['严格的', '有礼貌的', '害羞的'], answer: 1, tip: 'polite 是有礼貌的。' },
+    { word: 'delicious', options: ['热的', '健康的', '美味的'], answer: 2, tip: 'delicious 是美味的。' },
+    { word: 'weekend', options: ['周末', '星期一', '家庭作业'], answer: 0, tip: 'weekend 是周末。' },
+    { word: 'healthy', options: ['忙碌的', '健康的', '可爱的'], answer: 1, tip: 'healthy 是健康的。' },
+    { word: 'library', options: ['操场', '教室', '图书馆'], answer: 2, tip: 'library 是图书馆。' }
+  ];
+  let qi = 0, score = 0;
+  function renderQuiz() {
+    const root = document.getElementById('quiz');
+    root.replaceChildren();
+    if (qi >= QUESTIONS.length) {
+      const title = document.createElement('p');
+      title.className = 'quiz-word';
+      title.textContent = score + ' / ' + QUESTIONS.length;
+      const msg = document.createElement('p');
+      msg.className = 'feedback ok';
+      msg.textContent = score === 5 ? '全对！你可以当小老师，给同桌再出一题。' : score >= 3 ? '已经很棒。错的词我们再读一遍。' : '没关系，这些词我们一起再认一次。';
+      const again = document.createElement('button');
+      again.type = 'button'; again.className = 'go'; again.textContent = '再测一次';
+      again.addEventListener('click', () => { qi = 0; score = 0; renderQuiz(); });
+      root.append(title, msg, again);
+      return;
+    }
+    const q = QUESTIONS[qi];
+    const meta = document.createElement('p');
+    meta.className = 'quiz-meta';
+    meta.textContent = '第 ' + (qi + 1) + ' / ' + QUESTIONS.length + ' 题　这个词是什么意思？';
+    const word = document.createElement('p');
+    word.className = 'quiz-word';
+    word.textContent = q.word;
+    const row = document.createElement('div');
+    row.className = 'choice-row';
+    const feedback = document.createElement('p');
+    feedback.className = 'feedback';
+    feedback.setAttribute('aria-live', 'polite');
+    const next = document.createElement('button');
+    next.type = 'button'; next.className = 'go'; next.hidden = true;
+    next.textContent = qi === QUESTIONS.length - 1 ? '看成绩' : '下一题';
+    let locked = false;
+    q.options.forEach((text, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'choice'; btn.textContent = text;
+      btn.addEventListener('click', () => {
+        if (locked) return;
+        locked = true;
+        const ok = i === q.answer;
+        if (ok) score += 1;
+        row.querySelectorAll('button').forEach((b, j) => {
+          b.disabled = true;
+          if (j === q.answer) b.classList.add('right');
+          else if (j === i) b.classList.add('wrong');
+        });
+        feedback.className = 'feedback ' + (ok ? 'ok' : 'no');
+        feedback.textContent = (ok ? '对啦！' : '再想想也可以。正确答案是「' + q.options[q.answer] + '」。') + q.tip;
+        next.hidden = false;
+      });
+      row.appendChild(btn);
+    });
+    next.addEventListener('click', () => { qi += 1; renderQuiz(); });
+    root.append(meta, word, row, feedback, next);
+  }
+
+  document.querySelectorAll('.poem-line').forEach((line) => {
+    const answer = line.dataset.answer;
+    const blank = line.querySelector('.blank');
+    line.querySelectorAll('button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (line.classList.contains('solved')) return;
+        if (btn.textContent === answer) {
+          line.classList.add('solved');
+          blank.textContent = answer;
+          btn.classList.add('right');
+          line.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+        } else {
+          btn.classList.add('wrong');
+          line.classList.remove('shake');
+          void line.offsetWidth;
+          line.classList.add('shake');
+        }
+        const all = [...document.querySelectorAll('.poem-line')].every((n) => n.classList.contains('solved'));
+        document.getElementById('poemBanner').hidden = !all;
+      });
+    });
+  });
+
+  const TALK = [
+    { who: 'kid', html: 'Yesterday I <b class="bad">goed</b> to the park.' },
+    { who: 'ai', html: '你敢开口，真棒！昨天的事情，动词要用过去式。' },
+    { who: 'ai', html: '<b class="bad">goed</b> 不是英语单词。我们说：<b class="good">Yesterday I went to the park.</b>' },
+    { who: 'kid', html: 'She <b class="bad">don\'t</b> like apples.' },
+    { who: 'ai', html: '意思听懂啦。She 是“她”，一个人，don\'t 要变成 <b class="good">doesn\'t</b>。' },
+    { who: 'ai', html: '可以说：<b class="good">She doesn\'t like apples.</b>' }
+  ];
+  function clearTalk() { talkTimers.forEach(clearTimeout); talkTimers = []; }
+  function playTalk() {
+    clearTalk();
+    const log = document.getElementById('chatLog');
+    log.innerHTML = '';
+    TALK.forEach((line, i) => {
+      talkTimers.push(setTimeout(() => {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble ' + line.who;
+        bubble.innerHTML = '<small>' + (line.who === 'kid' ? '小朋友' : 'AI 小助手') + '</small><p>' + line.html + '</p>';
+        log.appendChild(bubble);
+        log.scrollTop = log.scrollHeight;
+      }, 350 + i * 1050));
+    });
+  }
+  document.getElementById('replayTalk').addEventListener('click', playTalk);
+
+  document.querySelectorAll('.idea').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.idea').forEach((b) => b.classList.remove('picked'));
+      btn.classList.add('picked');
+      document.getElementById('ideaPrompt').textContent = '你选了「' + btn.dataset.idea + '」。请说完整：我希望 AI 帮我' + btn.dataset.idea + '，我自己会……';
+    });
+  });
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const piArt = document.getElementById('piArt');
+  const piSteps = document.getElementById('piSteps');
+  const piNext = document.getElementById('piNext');
+  const piLines = [
+    '直径是通过圆心、两端都在圆上的线段。',
+    '让圆沿着直线滚整整一圈。',
+    '用直径去量这条路，大约能量出 3 段。',
+    '还多出一小截，所以大约是直径的 3.14 倍。这叫圆周率 π。'
+  ];
+  let piStep = 0, piFrame = 0;
+  function piSVG(p, step) {
+    const r = 70, d = r * 2, circ = Math.PI * d, cx0 = 96, ground = 188, cy = ground - r, dist = circ * p;
+    const yBar = ground + 26;
+    let extra = '';
+    if (step >= 1 && p < 0.08) {
+      extra += '<text x="' + cx0 + '" y="36" text-anchor="middle" font-size="22" font-weight="800" fill="#d23b55">直径</text>';
+    }
+    if (step >= 2 && p > 0.04) {
+      extra += '<circle cx="' + cx0 + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#2a2a2a" stroke-width="3" stroke-dasharray="7 6" opacity="0.4"/>';
+    }
+    if (step >= 3) {
+      const colors = ['#ffd84d', '#4c9aff', '#7bd66a'];
+      for (let i = 0; i < 3; i++) {
+        const x = cx0 + i * d;
+        extra += '<rect x="' + (x + 4) + '" y="' + yBar + '" width="' + (d - 10) + '" height="24" rx="7" fill="' + colors[i] + '" stroke="#2a2a2a" stroke-width="3"/>';
+        extra += '<text x="' + (x + d / 2) + '" y="' + (yBar + 48) + '" text-anchor="middle" font-size="18" font-weight="800">直径 ' + (i + 1) + '</text>';
+      }
+    }
+    if (step >= 4) {
+      const x = cx0 + 3 * d;
+      const w = Math.max(12, circ - 3 * d);
+      extra += '<rect x="' + x + '" y="' + yBar + '" width="' + w + '" height="24" rx="7" fill="#ff5d73" stroke="#2a2a2a" stroke-width="3"/>';
+      extra += '<text x="' + (x + 70) + '" y="' + (yBar + 48) + '" font-size="18" font-weight="800">多一截 ≈ 0.14</text>';
+      extra += '<text x="360" y="330" text-anchor="middle" font-size="22" font-weight="800">滚过的长度 ≈ 3.14 × 直径</text>';
+    }
+    return '<svg viewBox="0 0 760 360">' +
+      '<line x1="28" y1="' + ground + '" x2="740" y2="' + ground + '" stroke="#2a2a2a" stroke-width="4"/>' +
+      '<rect x="' + cx0 + '" y="' + (ground + 8) + '" width="' + Math.max(0, dist) + '" height="12" rx="6" fill="#ff5d73"/>' +
+      extra +
+      '<g transform="translate(' + dist.toFixed(2) + ' 0) rotate(' + (360 * p).toFixed(2) + ' ' + cx0 + ' ' + cy + ')">' +
+      '<circle cx="' + cx0 + '" cy="' + cy + '" r="' + r + '" fill="#fff3c4" stroke="#2a2a2a" stroke-width="5"/>' +
+      (step >= 1 ? '<line x1="' + (cx0 - r + 8) + '" y1="' + cy + '" x2="' + (cx0 + r - 8) + '" y2="' + cy + '" stroke="#ff5d73" stroke-width="6"/>' : '') +
+      '<circle cx="' + cx0 + '" cy="' + (cy + r - 14) + '" r="8" fill="#ff5d73" stroke="#2a2a2a" stroke-width="3"/>' +
+      '</g></svg>';
+  }
+  function paintPi(p, step) {
+    piArt.innerHTML = piSVG(p, step);
+    if (step === 0) piSteps.innerHTML = '<li class="wait">点「下一步」，先找出直径。</li>';
+    else piSteps.innerHTML = piLines.slice(0, step).map((t, i) => '<li class="' + (i === step - 1 ? 'fresh' : '') + (step === piLines.length && i === piLines.length - 1 ? ' final' : '') + '">' + t + '</li>').join('');
+    piNext.disabled = step >= piLines.length;
+    piNext.textContent = step >= piLines.length ? '完成啦' : '下一步';
+  }
+  function rollPi() {
+    if (reduceMotion) { paintPi(1, piStep); return; }
+    piNext.disabled = true;
+    const t0 = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / 2200);
+      const ease = 1 - Math.pow(1 - p, 3);
+      piArt.innerHTML = piSVG(ease, piStep);
+      if (p < 1) piFrame = requestAnimationFrame(tick);
+      else { piNext.disabled = piStep >= piLines.length; }
+    };
+    piFrame = requestAnimationFrame(tick);
+  }
+  piNext.addEventListener('click', () => {
+    if (piStep >= piLines.length) return;
+    piStep += 1;
+    paintPi(piStep > 2 ? 1 : 0, piStep);
+    if (piStep === 2) rollPi();
+  });
+  document.getElementById('piReset').addEventListener('click', () => {
+    cancelAnimationFrame(piFrame);
+    piStep = 0;
+    paintPi(0, 0);
+  });
+
+  const areaGrid = document.getElementById('areaGrid');
+  const areaSteps = document.getElementById('areaSteps');
+  const areaNext = document.getElementById('areaNext');
+  const areaColors = ['#ffd84d', '#ff8a3d', '#4c9aff', '#7bd66a'];
+  const areaLines = ['第 1 排铺好了：6 × 1 = 6', '第 2 排铺好了：6 × 2 = 12', '第 3 排铺好了：6 × 3 = 18', '4 排都铺好了：6 × 4 = 24。面积 = 长 × 宽。'];
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) {
+    const cell = document.createElement('i');
+    cell.dataset.row = String(r);
+    areaGrid.appendChild(cell);
+  }
+  let areaRow = 0;
+  function paintArea() {
+    areaGrid.querySelectorAll('i').forEach((cell) => {
+      const r = Number(cell.dataset.row);
+      cell.style.background = r < areaRow ? areaColors[r] : '#fff';
+    });
+    areaSteps.innerHTML = areaRow === 0
+      ? '<li class="wait">点「铺下一排」，一排一排看长乘宽。</li>'
+      : areaLines.slice(0, areaRow).map((t, i) => '<li class="' + (i === areaRow - 1 ? 'fresh' : '') + (areaRow === 4 && i === 3 ? ' final' : '') + '">' + t + '</li>').join('');
+    areaNext.disabled = areaRow >= 4;
+    areaNext.textContent = areaRow >= 4 ? '铺好啦' : '铺下一排';
+  }
+  areaNext.addEventListener('click', () => { if (areaRow < 4) { areaRow += 1; paintArea(); } });
+  document.getElementById('areaReset').addEventListener('click', () => { areaRow = 0; paintArea(); });
+
+  function wedge(cx, cy, r, a0, a1) {
+    const pt = (a) => {
+      const rad = (a - 90) * Math.PI / 180;
+      return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+    };
+    const [x0, y0] = pt(a0);
+    const [x1, y1] = pt(a1);
+    const large = a1 - a0 > 180 ? 1 : 0;
+    return 'M ' + cx + ' ' + cy + ' L ' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Z';
+  }
+  function drawCake(step) {
+    const cx = 210, cy = 214, r = 132;
+    let slices = '';
+    if (step === 0) {
+      slices = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#fff3c4" stroke="#2a2a2a" stroke-width="5"/>';
+    } else {
+      for (let i = 0; i < 8; i++) {
+        let fill = '#fff3c4';
+        if (step >= 5 && i >= 5) fill = '#ffd84d';
+        else if (step >= 2 && i < 3) fill = '#ff8fab';
+        else if (step >= 3 && i < 5) fill = '#ff8a3d';
+        const width = step >= 5 && i >= 5 ? 7 : 3;
+        slices += '<path d="' + wedge(cx, cy, r, i * 45, (i + 1) * 45) + '" fill="' + fill + '" stroke="#2a2a2a" stroke-width="' + width + '"/>';
+      }
+    }
+    let legend = '';
+    if (step >= 2) legend += '<rect x="430" y="70" width="22" height="22" rx="5" fill="#ff8fab" stroke="#2a2a2a" stroke-width="3"/><text x="462" y="88" font-size="20" font-weight="800">小明吃的</text>';
+    if (step >= 3) legend += '<rect x="430" y="108" width="22" height="22" rx="5" fill="#ff8a3d" stroke="#2a2a2a" stroke-width="3"/><text x="462" y="126" font-size="20" font-weight="800">小红吃的</text>';
+    if (step >= 5) legend += '<rect x="430" y="146" width="22" height="22" rx="5" fill="#ffd84d" stroke="#2a2a2a" stroke-width="3"/><text x="462" y="164" font-size="20" font-weight="800">剩下的</text>';
+    const badge = step === 4 ? '<rect x="400" y="250" width="210" height="54" rx="14" fill="#fff" stroke="#2a2a2a" stroke-width="4"/><text x="505" y="286" text-anchor="middle" font-size="26" font-weight="800">吃掉了 5/8</text>'
+      : step >= 5 ? '<rect x="400" y="250" width="210" height="54" rx="14" fill="#d9ffb0" stroke="#2a2a2a" stroke-width="4"/><text x="505" y="286" text-anchor="middle" font-size="26" font-weight="800">剩下 3/8</text>' : '';
+    return '<svg viewBox="0 0 680 430"><ellipse cx="' + cx + '" cy="' + (cy + r + 8) + '" rx="150" ry="22" fill="#f3e0cc"/>' + slices + legend + badge + '</svg>';
+  }
+
+  function drawEq(step) {
+    const x0 = 28, y = 168, h = 62, w = 100, gap = 8;
+    let bars = '';
+    if (step === 0) bars += '<text x="250" y="250" text-anchor="middle" font-size="22" font-weight="800">下一步，把价钱画成线段</text>';
+    if (step >= 1) for (let i = 0; i < 3; i++) {
+      const x = x0 + i * (w + gap);
+      const fill = ['#8b6cff', '#4c9aff', '#1fb8a6'][i];
+      bars += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="12" fill="' + fill + '" stroke="#2a2a2a" stroke-width="4"/>';
+      bars += '<text x="' + (x + w / 2) + '" y="' + (y + 40) + '" text-anchor="middle" font-size="26" font-weight="800" fill="#fff">x</text>';
+      if (step >= 3) bars += '<text x="' + (x + w / 2) + '" y="' + (y + h + 28) + '" text-anchor="middle" font-size="22" font-weight="800">7 元</text>';
+    }
+    const x8 = x0 + 3 * (w + gap);
+    const barEnd = x0 + 3 * w + 2 * gap;
+    if (step >= 1 && step < 2) {
+      bars += '<rect x="' + x8 + '" y="' + y + '" width="118" height="' + h + '" rx="12" fill="#ffd84d" stroke="#2a2a2a" stroke-width="4"/>';
+      bars += '<text x="' + (x8 + 59) + '" y="' + (y + 40) + '" text-anchor="middle" font-size="26" font-weight="800">8</text>';
+      if (step === 1) bars += '<text x="250" y="292" text-anchor="middle" font-size="24" font-weight="800">3x + 8 = 29</text>';
+    } else if (step >= 2) {
+      bars += '<rect x="500" y="' + y + '" width="140" height="' + h + '" rx="12" fill="#fff" stroke="#2a2a2a" stroke-width="4" stroke-dasharray="7 6"/>';
+      bars += '<text x="570" y="' + (y + 40) + '" text-anchor="middle" font-size="22" font-weight="800">减去 8</text>';
+      bars += '<path d="M' + x0 + ' 150 H' + barEnd + '" fill="none" stroke="#2a2a2a" stroke-width="4"/>';
+      bars += '<text x="' + ((x0 + barEnd) / 2) + '" y="138" text-anchor="middle" font-size="24" font-weight="800">3x = 21</text>';
+    }
+    if (step >= 4) bars += '<rect x="150" y="330" width="300" height="52" rx="14" fill="#d9ffb0" stroke="#2a2a2a" stroke-width="4"/><text x="300" y="364" text-anchor="middle" font-size="22" font-weight="800">验算 3×7+8=29</text>';
+    const pens = [0, 1, 2].map((i) => '<g transform="translate(' + (24 + i * 42) + ' 18)"><rect y="18" width="22" height="70" rx="6" fill="' + ['#8b6cff', '#4c9aff', '#1fb8a6'][i] + '" stroke="#2a2a2a" stroke-width="3"/><polygon points="0,18 22,18 11,0" fill="#ffd84d" stroke="#2a2a2a" stroke-width="3"/></g>').join('');
+    return '<svg viewBox="0 0 680 420">' + pens +
+      '<rect x="170" y="28" width="150" height="78" rx="12" fill="#ffd84d" stroke="#2a2a2a" stroke-width="4"/>' +
+      '<text x="245" y="62" text-anchor="middle" font-size="22" font-weight="800">笔记本</text>' +
+      '<text x="245" y="90" text-anchor="middle" font-size="20" font-weight="800">8 元</text>' +
+      '<text x="470" y="78" font-size="28" font-weight="800">一共 29 元</text>' + bars + '</svg>';
+  }
+
+  function drawTrap(step) {
+    const A = [80, 320], M = [304, 320], D = [136, 180], K = [248, 180], B = [416, 320], C = [472, 180];
+    const left = A[0] + ',' + A[1] + ' ' + M[0] + ',' + M[1] + ' ' + K[0] + ',' + K[1] + ' ' + D[0] + ',' + D[1];
+    const right = M[0] + ',' + M[1] + ' ' + B[0] + ',' + B[1] + ' ' + C[0] + ',' + C[1] + ' ' + K[0] + ',' + K[1];
+    let body = '<polygon points="' + left + '" fill="#8b6cff" stroke="#2a2a2a" stroke-width="5" stroke-linejoin="round"/>';
+    if (step >= 2) body += '<polygon points="' + right + '" fill="#ffd84d" stroke="#2a2a2a" stroke-width="5" stroke-linejoin="round"/>';
+    let labels = '';
+    if (step >= 1 && step < 3) {
+      labels += '<text x="192" y="168" text-anchor="middle" font-size="20" font-weight="800">上底 4 米</text>';
+      labels += '<text x="192" y="352" text-anchor="middle" font-size="20" font-weight="800">下底 8 米</text>';
+      labels += '<line x1="136" y1="180" x2="136" y2="320" stroke="#2a2a2a" stroke-width="3" stroke-dasharray="6 5"/>';
+      labels += '<text x="78" y="256" font-size="20" font-weight="800">高 5 米</text>';
+    }
+    if (step === 2) labels += '<text x="500" y="250" font-size="20" font-weight="800">转 180° 拼上</text>';
+    if (step >= 3) {
+      labels += '<line x1="80" y1="360" x2="416" y2="360" stroke="#2a2a2a" stroke-width="3"/>';
+      labels += '<text x="248" y="386" text-anchor="middle" font-size="20" font-weight="800">底 4 + 8 = 12 米</text>';
+      labels += '<line x1="520" y1="180" x2="520" y2="320" stroke="#2a2a2a" stroke-width="3" stroke-dasharray="6 5"/>';
+      labels += '<text x="534" y="256" font-size="20" font-weight="800">高 5 米</text>';
+    }
+    if (step === 4) labels += '<rect x="470" y="70" width="180" height="52" rx="12" fill="#fff" stroke="#2a2a2a" stroke-width="4"/><text x="560" y="104" text-anchor="middle" font-size="24" font-weight="800">12×5=60</text>';
+    if (step >= 5) labels += '<rect x="470" y="70" width="190" height="64" rx="12" fill="#d9ffb0" stroke="#2a2a2a" stroke-width="4"/><text x="565" y="110" text-anchor="middle" font-size="22" font-weight="800">一个是 30 平方米</text>';
+    return '<svg viewBox="0 0 680 430">' + body + labels + '</svg>';
+  }
+
+  function drawVol(step) {
+    const x = 150, y = 70, w = 250, h = 270, bottom = y + h;
+    const waterTop = step >= 3 ? 150 : 220;
+    let water = '';
+    if (step >= 1) {
+      water += '<rect x="' + (x + 8) + '" y="' + waterTop + '" width="' + (w - 16) + '" height="' + (bottom - waterTop - 8) + '" fill="#8ed4ff"/>';
+      if (step >= 3) water += '<rect x="' + (x + 8) + '" y="' + waterTop + '" width="' + (w - 16) + '" height="70" fill="#4c9aff" opacity="0.85"/>';
+      water += '<path d="M' + (x + 8) + ' ' + waterTop + ' Q' + (x + 70) + ' ' + (waterTop - 10) + ' ' + (x + w / 2) + ' ' + waterTop + ' T' + (x + w - 8) + ' ' + waterTop + '" fill="none" stroke="#2a2a2a" stroke-width="3"/>';
+    }
+    let stone = '';
+    if (step === 1) stone = '<polygon points="250,36 310,48 292,92 236,86" fill="#b9b2a8" stroke="#2a2a2a" stroke-width="4"/>';
+    if (step >= 2) stone = '<polygon points="230,186 300,170 328,214 250,236 214,214" fill="#b9b2a8" stroke="#2a2a2a" stroke-width="4"/>';
+    let labels = '<text x="150" y="380" font-size="20" font-weight="800">长 20 厘米</text><text x="430" y="210" font-size="20" font-weight="800">宽 10 厘米</text>';
+    if (step >= 3) labels += '<text x="430" y="150" font-size="20" font-weight="800" fill="#1d4e89">升高 3 厘米</text>';
+    if (step >= 3) labels += '<text x="430" y="250" font-size="18" font-weight="800">这层水的体积</text><text x="430" y="276" font-size="18" font-weight="800">= 石头的体积</text>';
+    if (step >= 4) labels += '<rect x="414" y="300" width="240" height="58" rx="12" fill="#d9ffb0" stroke="#2a2a2a" stroke-width="4"/><text x="534" y="336" text-anchor="middle" font-size="20" font-weight="800">20×10×3=600</text>';
+    return '<svg viewBox="0 0 680 430"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="8" fill="#f7fbff" stroke="#2a2a2a" stroke-width="5"/>' + water + stone + labels + '</svg>';
+  }
+
+  initStepper('cakeLab', [
+    '整个蛋糕平均分成 8 块，是 ' + frac(8, 8) + '。',
+    '小明吃了 3 块，就是 ' + frac(3, 8) + '。',
+    '小红又吃了 2 块，就是 ' + frac(2, 8) + '。',
+    '一共吃掉 ' + frac(3, 8) + ' + ' + frac(2, 8) + ' = ' + frac(5, 8) + '。',
+    '剩下 ' + frac(8, 8) + ' − ' + frac(5, 8) + ' = ' + frac(3, 8) + '。'
+  ], drawCake);
+  initStepper('eqLab', [
+    '设一支钢笔 x 元：3x + 8 = 29。',
+    '两边都减去 8：3x = 21。',
+    '21 平均分成 3 份：x = 7。',
+    '验算：3 × 7 + 8 = 29。对上了。'
+  ], drawEq);
+  initStepper('trapLab', [
+    '这是梯形：上底 4 米，下底 8 米，高 5 米。',
+    '拿一个完全一样的梯形，转 180° 拼过来。',
+    '拼成平行四边形，底是 4 + 8 = 12 米，高还是 5 米。',
+    '平行四边形的面积：12 × 5 = 60。',
+    '一个梯形是一半：(4 + 8) × 5 ÷ 2 = 30 平方米。'
+  ], drawTrap);
+  initStepper('volLab', [
+    '水缸底面长 20 厘米，宽 10 厘米。',
+    '把石头放进去。',
+    '水面升高 3 厘米。这一层水的位置，被石头占住了。',
+    '石头的体积 = 20 × 10 × 3 = 600 立方厘米。'
+  ], drawVol);
+
+  const layerHost = document.getElementById('layerDemo');
+  const layerBtn = document.getElementById('layerBtn');
+  let layers = 0;
+  function drawLayers(n) {
+    const widths = [150, 190, 220, 236, 236, 210, 180, 156];
+    const h = 26, base = 392;
+    let stack = '<rect x="36" y="78" width="132" height="96" rx="16" fill="#e7f0ff" stroke="#2a2a2a" stroke-width="4"/>';
+    stack += '<rect x="54" y="46" width="96" height="34" rx="10" fill="#4c9aff" stroke="#2a2a2a" stroke-width="4"/>';
+    stack += '<text x="102" y="210" text-anchor="middle" font-size="18" font-weight="800">打印头</text>';
+    stack += '<rect x="190" y="400" width="420" height="16" rx="6" fill="#f0d2b0" stroke="#2a2a2a" stroke-width="4"/>';
+    for (let i = 0; i < n; i++) {
+      const w = widths[i];
+      const x = 400 - w / 2;
+      const y = base - (i + 1) * h;
+      stack += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + (h - 3) + '" rx="7" fill="' + (i % 2 ? '#6a4df0' : '#8d74ff') + '" stroke="#2a2a2a" stroke-width="3"/>';
+    }
+    if (n >= 8) {
+      const top = base - n * h;
+      stack += '<path d="M330 ' + top + ' L300 ' + (top - 62) + ' L368 ' + top + ' Z" fill="#6a4df0" stroke="#2a2a2a" stroke-width="4" stroke-linejoin="round"/>';
+      stack += '<path d="M470 ' + top + ' L500 ' + (top - 62) + ' L432 ' + top + ' Z" fill="#6a4df0" stroke="#2a2a2a" stroke-width="4" stroke-linejoin="round"/>';
+    }
+    return '<svg viewBox="0 0 680 440">' + stack + '<text x="400" y="36" text-anchor="middle" font-size="22" font-weight="800">第 ' + n + ' 层 / 共 8 层</text></svg>';
+  }
+  function paintLayers() {
+    layerHost.innerHTML = drawLayers(layers);
+    layerBtn.disabled = layers >= 8;
+    layerBtn.textContent = layers >= 8 ? '堆好啦' : '铺下一层';
+  }
+  layerBtn.addEventListener('click', () => { if (layers < 8) { layers += 1; paintLayers(); } });
+  document.getElementById('layerReset').addEventListener('click', () => { layers = 0; paintLayers(); });
+
+  const cube = document.getElementById('cube');
+  const palette = ['#ff5d73', '#ffd84d', '#4c9aff', '#7bd66a', '#ff8a3d', '#f4f4f4'];
+  let cells = [0, 1, 2, 3, 4, 1, 5, 2, 0];
+  let cubeTimer = null;
+  function paintCube() {
+    cube.innerHTML = cells.map((c) => '<i style="background:' + palette[c] + '"></i>').join('');
+  }
+  function playCube() {
+    clearInterval(cubeTimer);
+    cells = [0, 1, 2, 3, 4, 1, 5, 2, 0];
+    let moves = 0;
+    paintCube();
+    cubeTimer = setInterval(() => {
+      moves += 1;
+      if (moves < 4) {
+        const a = cells[0], b = cells[1], c = cells[2];
+        cells[0] = c; cells[1] = a; cells[2] = b;
+      } else {
+        cells = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        clearInterval(cubeTimer);
+      }
+      paintCube();
+    }, 420);
+  }
+  document.getElementById('cubeBtn').addEventListener('click', playCube);
+
+  window.addEventListener('resize', () => { if (window.innerWidth >= 820) { stage.style.width = ''; stage.style.height = ''; stage.style.fontSize = ''; } layout(); });
+  renderQuiz();
+  paintPi(0, 0);
+  paintArea();
+  paintLayers();
+  paintCube();
+  layout();
+  show(0);
+  window.__deck = { show, count: () => slides.length, index: () => index };
+})();
+</script>
+</body>
+</html>
